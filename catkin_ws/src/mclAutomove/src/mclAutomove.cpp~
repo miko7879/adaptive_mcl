@@ -1,0 +1,60 @@
+/*
+ * mclAutomove.cpp
+ *
+ * This module contains the implementations of the functions in mclAutomove.h
+ *
+ * 	Created on 11 March 2017
+ *		Authors: Garrett McDonald and Michael Kogan
+ */
+
+#include "mclAutomove.h"
+
+bool canDrive(vector<float> raw){
+	float dist = 2*MIN_RANGE;				//variable dist is the distance the robot must maintain from a wall
+	vector<float> scan = convertScan(raw);	//convert the raw scan into data usable by function
+	float center = scan[(ANGLE_COUNT+1)/2]; //center is the scan distance returned from the center		
+	float left = scan[0]; 					//center is the scan distance returned from the
+	float right = scan[ANGLE_COUNT-1]; 		//center is the scan distance returned from the
+	bool drive = false;						//the default drive state is false
+	int i;									//counter to be used in loops
+	ROS_INFO("Forward Scan: %f", center);
+	
+	//if an object was detected on the left, scan the whole left to make sure it was not an error
+	if(left == MAX_RANGE){
+		for(i = 0; i <= ARC*ANGLE_COUNT;i++){
+			if(scan[i] > MIN_RANGE && scan[i] < MAX_RANGE){
+				left = scan[i];
+				break;			
+			}
+		}
+	}
+	ROS_INFO("Left Scan: %f", left);
+	
+	//same for right
+	if(right == MAX_RANGE){
+		for(i = ANGLE_COUNT-1; i >= (ANGLE_COUNT - (ARC*ANGLE_COUNT));i--){
+			if(scan[i] > MIN_RANGE && scan[i] < MAX_RANGE){
+				right = scan[i];
+				break;			
+			}
+		}
+	}
+	ROS_INFO("Right Scan: %f", right);
+	
+	//if there is space in front of the robot, and nothing to the immediate left or right, it is safe to proceed forward
+	if(center > dist && left < MAX_RANGE && left > 1.5*MIN_RANGE && right < MAX_RANGE && right > 1.5*MIN_RANGE){
+		drive = true;
+	}
+	return drive;
+}
+
+vector<float> convertScan(vector<float> scan){
+	vector<float> parsed(ANGLE_COUNT);
+	for(int i = 0; i < ANGLE_COUNT; i++){
+		if(isnan(scan[i]) || scan[i] > MAX_RANGE)
+			parsed[i] = MAX_RANGE;
+		else
+			parsed[i] = scan[i];
+	}
+	return parsed;
+}

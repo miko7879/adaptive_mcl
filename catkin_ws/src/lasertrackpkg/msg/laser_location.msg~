@@ -1,0 +1,5 @@
+ bool(1) detected
+ uint16 xsize
+ uint16 ysize
+ uint16 x
+ uint16 y
